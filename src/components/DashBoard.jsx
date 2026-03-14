@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supaBaseClient'
+import UserList from './UserList'
+import ChatPage from './ChatPage'
 
 const DashBoard = () => {
 
     const [user, setUser] = useState(null)
     const [name, setName] = useState(null)
+    const [selectedUser, setSelectedUser] = useState(null)
 
     const navigate = useNavigate()
 
@@ -14,30 +17,30 @@ const DashBoard = () => {
     }, [])
 
     const getUser = async () => {
-        const { data, error } = await supabase.auth.getUser()
+        const { data, error } = await supabase.auth.getUser()  //to get current  user
 
         console.log("Full response:", data)
 
         const authUser = data.user
         console.log("Auth ID:", authUser.id)
-       
+
 
         if (data?.user) {
             setUser(data.user)
 
-            const { data:profile, error:profileError } = await supabase
+            const { data: profile, error: profileError } = await supabase
                 .from('users')
                 .select("name")
                 .eq('id', authUser.id)
                 .single()
 
-                if(profileError){
-                    console.log("error",profileError)
-                }
-                if(profile){
-                    setName(profile.name)
-                }
-                console.log(profile.name,"name")
+            if (profileError) {
+                console.log("error", profileError)
+            }
+            if (profile) {
+                setName(profile.name)
+            }
+            console.log(profile.name, "name")
         }
     }
 
@@ -52,7 +55,7 @@ const DashBoard = () => {
 
                     {user ? <>
 
-                        <h1 className='text-white text-2xl italic'>{name}</h1>
+                        <h1 className='text-white text-2xl italic'>Hi, {name}</h1>
                         <button onClick={async () => {
                             const { error } = await supabase.auth.signOut()
                             alert("loggedOut")
@@ -62,6 +65,11 @@ const DashBoard = () => {
                             <Link className='text-xl outline-none text-white' to="/login">SignOut</Link>
 
                         </button>
+
+                        <div className='flex gap-3'>
+                            <UserList user={user} setSelectedUser={setSelectedUser}/>
+                            <ChatPage user={user} selectedUser={selectedUser}/>
+                        </div>
 
                     </>
                         :
